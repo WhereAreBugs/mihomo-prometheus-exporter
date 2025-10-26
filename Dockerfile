@@ -5,8 +5,8 @@ ENV GOOS=linux
 
 WORKDIR /app
 COPY . .
-RUN go mod download
-RUN go build -ldflags="-w -s" -o /mihomo-exporter .
+RUN go mod download && go mod tidy
+RUN go build -ldflags="-w -s" -o /mihomo-exporter ./main.go
 
 
 # Stage 2: Final Image
