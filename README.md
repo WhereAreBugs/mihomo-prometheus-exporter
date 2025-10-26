@@ -1,9 +1,3 @@
-当然，一份优秀的 `README.md` 文件是好项目的门面。它应该清晰、简洁，并遵循 Go 社区推崇的实用主义和简约哲学。
-
-下面是一份为你生成的 `README.md` 文件。
-
----
-
 # Mihomo Prometheus Exporter
 
 [![Go Version](https://img.shields.io/badge/go-1.18%2B-blue.svg)](https://golang.org/)
