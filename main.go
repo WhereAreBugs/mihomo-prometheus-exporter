@@ -3,18 +3,33 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+func loadFlagsFromEnv() {
+	replacer := strings.NewReplacer(".", "_", "-", "_")
+
+	flag.VisitAll(func(f *flag.Flag) {
+		envName := strings.ToUpper(replacer.Replace(f.Name))
+		if value, ok := os.LookupEnv(envName); ok {
+			if err := flag.Set(f.Name, value); err != nil {
+				log.Printf("Failed to set flag '%s' from environment variable '%s' with value '%s': %v", f.Name, envName, value, err)
+			} else {
+				log.Printf("Loaded flag '%s' from environment variable '%s'", f.Name, envName)
+			}
+		}
+	})
+}
 
 func main() {
 	// 命令行参数定义
@@ -25,6 +40,9 @@ func main() {
 	latencyInterval := flag.Duration("latency.interval", 60*time.Second, "Interval at which to test proxy latency.")
 	metricPrefix := flag.String("metric.prefix", "mihomo", "Prefix for all exported metrics.")
 	flag.Parse()
+
+	// 从环境变量加载配置，环境变量会覆盖命令行参数
+	loadFlagsFromEnv()
 
 	log.Println("Starting mihomo-prometheus-exporter...")
 	log.Printf("Listening on %s", *listenAddress)
@@ -76,7 +94,7 @@ func main() {
 	}()
 
 	// 启动 HTTP 服务器
-	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}
 
