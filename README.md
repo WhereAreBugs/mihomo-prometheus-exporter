@@ -1,6 +1,6 @@
 # Mihomo Prometheus Exporter
 
-[![Go Version](https://img.shields.io/badge/go-1.18%2B-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/go-1.23%2B-blue.svg)](https://golang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `mihomo-prometheus-exporter` 是一个轻量级、高性能的 Prometheus
@@ -60,14 +60,45 @@ Exporter，用于从 [Mihomo](https://github.com/MetaCubeX/mihomo) 中导出详�
 | `latency.interval`   | `LATENCY_INTERVAL`   | `60s`                   | 从 Mihomo 进行统一延迟测试的频率                   |
 | `metric.prefix`      | `METRIC_PREFIX`      | `mihomo`                | 导出的指标前缀                                |
 
+### Docker运行
+
+前台运行测试
+
+```shell
+docker run -it --rm -e MIHOMO_API_URL=http://host.docker.internal:9097 -e MIHOMO_API_TOKEN=set-your-secret  -p 9188:9188 ghcr.io/wherearebugs/mihomo-prometheus-exporter:master
+```
+
+正常启动
+
+```shell
+ docker run -d -e MIHOMO_API_URL=http://host.docker.internal:9097 -e MIHOMO_API_TOKEN=set-your-secret  -p 9188:9188  ghcr.io/wherearebugs/mihomo-prometheus-exporter:master
+```
+
+### Docker Compose Service
+
+```yaml
+version: "3.3"
+services:
+  mihomo-prometheus-exporter:
+    environment:
+      - MIHOMO_API_URL=http://host.docker.internal:9097 # 替换成实际的API地址
+      - MIHOMO_API_TOKEN=set-your-secret # 替换成实际的token
+      - METRIC_PREFIX=mihomo
+    ports:
+      - 9188:9188
+    image: ghcr.io/wherearebugs/mihomo-prometheus-exporter:master
+  # 按需添加其他的service...
+networks: {}
+```
+
 ### Prometheus 配置
 
 将以下内容添加到你的 `prometheus.yml` 文件中，以开始抓取 Exporter 暴露的指标。
 
 ```yaml
 scrape_configs:
-  - job_name: 'mihomo'
-    scrape_interval: 15s
+  - job_name: 'mihomo' #或者其他你喜欢的名字
+    scrape_interval: 1s #建议与SCRAPE_INTERVAL参数一致
     static_configs:
       - targets: [ 'localhost:9188' ] # 替换为 exporter 运行的地址
 ```
@@ -76,22 +107,22 @@ scrape_configs:
 
 以下是本 Exporter 提供的核心指标列表。
 
-| 指标名称 | 类型 | 标签 (`l                            abel`)                                  | 描述 |
-| ------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `mihomo_traffic _upload_speed_bytes`       | Gauge | `(no ne)`                                        |
-当前全局上传速率 (字节/秒)。 |
-| `mihomo_traffic _download_speed_bytes`     | Gauge | `(no ne)`                                        |
-当前全局下载速率 (字节/秒)。 |
-| `mihomo_connect ions_active_total`         | Gauge | `(no ne)`                                        |
-当前活跃连接的总数。 |
-| `mihomo_connect ion_upload_bytes_total`    | Gauge | `sou rce_host`, `destination`, `outbound_node`   |
-单个连接累计上传的字节数。 |
-| `mihomo_connect ion_download_bytes_total`  | Gauge | `sou rce_host`, `destination`, `outbound_node`   |
-单个连接累计下载的字节数。 |
-| `mihomo_proxy_l atency_ms`                 | Gauge | `pro xy_name`                                    |
-代理节点的延迟 (毫秒)。-1 表示测试失败。 |
-| `mihomo_proxy_a vailable`                  | Gauge | `pro xy_name`                                    |
-代理节点的可用性 (1=可用, 0=不可用)。 |
+| 指标名称                                      | 类型    | 标签 (`label`)                                   | 描述 | 
+|-------------------------------------------|-------|------------------------------------------------|----|
+| `mihomo_traffic _upload_speed_bytes`      | Gauge | `(no ne)`                                      |    |
+| 当前全局上传速率 (字节/秒)。                          |       |                                                |    |
+| `mihomo_traffic _download_speed_bytes`    | Gauge | `(no ne)`                                      |    |
+| 当前全局下载速率 (字节/秒)。                          |       |                                                |    |
+| `mihomo_connect ions_active_total`        | Gauge | `(no ne)`                                      |    |
+| 当前活跃连接的总数。                                |       |                                                |    |
+| `mihomo_connect ion_upload_bytes_total`   | Gauge | `sou rce_host`, `destination`, `outbound_node` |    |
+| 单个连接累计上传的字节数。                             |       |                                                |    |
+| `mihomo_connect ion_download_bytes_total` | Gauge | `sou rce_host`, `destination`, `outbound_node` |    |
+| 单个连接累计下载的字节数。                             |       |                                                |    |
+| `mihomo_proxy_l atency_ms`                | Gauge | `pro xy_name`                                  |    |
+| 代理节点的延迟 (毫秒)。-1 表示测试失败。                   |       |                                                |    |
+| `mihomo_proxy_a vailable`                 | Gauge | `pro xy_name`                                  |    |
+| 代理节点的可用性 (1=可用, 0=不可用)。                   |       |                                                |    |
 
 ## PromQL 查询示例 (Grafana 看板灵感)
 
