@@ -6,7 +6,7 @@ ENV GOOS=linux
 WORKDIR /app
 COPY . .
 RUN go mod download && go mod tidy
-RUN go build -ldflags="-w -s" -o /mihomo-exporter ./main.go
+RUN go build -ldflags="-w -s" -o /mihomo-exporter mihomo-prometheus-exporter
 
 
 # Stage 2: Final Image
