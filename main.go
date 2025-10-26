@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"log"
 	"net/http"
@@ -49,7 +50,7 @@ func main() {
 	// 设置 HTTP 服务器
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
+		_, _ = w.Write([]byte(`<html>
              <head><title>Mihomo Exporter</title></head>
              <body>
              <h1>Mihomo Exporter</h1>
@@ -60,14 +61,13 @@ func main() {
 
 	server := &http.Server{Addr: *listenAddress}
 
-	// 监听系统信号以实现优雅关闭
+	// 优雅关闭
 	go func() {
 		sigchan := make(chan os.Signal, 1)
 		signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigchan
 		log.Println("Shutdown signal received, gracefully shutting down...")
 		cancel() // 通知更新器停止
-		// 给服务器一点时间来处理剩余的请求
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer shutdownCancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
@@ -76,7 +76,7 @@ func main() {
 	}()
 
 	// 启动 HTTP 服务器
-	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}
 

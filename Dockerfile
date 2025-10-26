@@ -4,9 +4,8 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
 COPY . .
+RUN go mod download
 RUN go build -ldflags="-w -s" -o /mihomo-exporter .
 
 
